@@ -35,7 +35,27 @@ int main()
 
 	// TESTING STACK -----------------------------------------------
 
-	// 
+	AS as = InitS(sizeof(int));
+
+	x = 30;
+	Push(as, &x);
+	x = 42;
+	Push(as, &x);
+	x = 1000;
+	Push(as, &x);
+
+	p = Top(as);
+	printf("%d // 1000\n", *p);
+	p = Pop(as);
+	printf("%d // 1000\n", *p);
+	p = Pop(as);
+	printf("%d // 42\n", *p);
+	p = Pop(as);
+	printf("%d // 30\n", *p);
+	p = Pop(as);
+	printf("%p // nil\n", p);
+
+	// ------------------------------------------------------------
 
 
 	return 0;
