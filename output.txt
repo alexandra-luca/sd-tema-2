@@ -1,0 +1,12 @@
+google.com
+facebook.com
+yahoo.com
+(0: google.com)
+(1: yahoo.com)
+(0: facebook.com)
+(1: yahoo.com)
+(2: acs.pub.ro)
+google.com
+facebook.com
+yahoo.com
+acs.pub.ro

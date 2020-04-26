@@ -14,6 +14,11 @@ AQ InitQ(size_t dime)
 	return aq;
 }
 
+int EmptyQ(AQ aq) 
+{
+	return aq->ic == NULL;
+}
+
 void DestroyQ(AQ aq) 
 {
 	// todo	

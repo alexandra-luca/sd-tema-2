@@ -15,5 +15,6 @@ void DestroyQ(AQ aq);
 void InsertQ(AQ aq, void *elem);
 void* ExtractQ(AQ aq);
 void* PeakQ(AQ aq);
+int EmptyQ(AQ aq);
 
 #endif
