@@ -1,4 +1,4 @@
 build:
-	gcc main.c utils.c coada.c stiva.c
+	gcc -Wall main.c utils.c coada.c stiva.c -o tema2
 clean:
-	rm a.out
+	rm -f tema2
