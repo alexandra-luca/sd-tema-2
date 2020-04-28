@@ -14,7 +14,7 @@ AS InitS(size_t dime)
 
 void DestroyS(AS as) 
 {
-	// todo
+	free(as);
 }
 
 void Push(AS as, void *elem) 

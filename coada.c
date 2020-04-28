@@ -21,7 +21,7 @@ int EmptyQ(AQ aq)
 
 void DestroyQ(AQ aq) 
 {
-	// todo	
+	free(aq);
 }
 
 void InsertQ(AQ aq, void *elem) 
@@ -64,3 +64,91 @@ void* PeakQ(AQ aq)
 	void *elem = aq->ic->info;
 	return elem;
 }
+
+
+// -------------
+
+
+APQ InitPQ(size_t dime) 
+{
+	APQ apq = (APQ)malloc(sizeof(TPCoada));
+	apq->dime = dime;
+	apq->ic = NULL;
+
+	return apq;
+}
+
+int EmptyPQ(APQ apq) 
+{
+	return apq->ic == NULL;
+}
+
+void DestroyPQ(APQ apq) 
+{
+	// todo	
+}
+
+void InsertPQ(APQ apq, void *elem, unsigned long priority) 
+{
+	ACel acel = (ACel)malloc(sizeof(TCel));
+	acel->urm = NULL;
+	acel->info = malloc(sizeof(TPQVal));
+
+	((TPQVal*)(acel->info))->val = malloc(apq->dime);
+	memcpy(((TPQVal*)(acel->info))->val, elem, apq->dime);
+	((TPQVal*)(acel->info))->priority = priority;
+	
+	if (apq->ic == NULL) {
+		apq->ic = acel;
+	} else {
+		ACel p = apq->ic;
+
+		if (priority < ((TPQVal*)(p->info))->priority) {
+			acel->urm = apq->ic;
+			apq->ic = acel;
+		} else {
+			while (p->urm != NULL && ((TPQVal*)(p->urm->info))->priority <= priority) {
+				p = p->urm;
+			}
+
+			acel->urm = p->urm;
+			p->urm = acel;
+		}
+	}
+}
+
+void* ExtractPQ(APQ apq) 
+{
+	if (apq->ic == NULL) {
+		return NULL;
+	}
+
+	void *elem = ((TPQVal*)(apq->ic->info))->val;
+
+	ACel celula_de_sters = apq->ic;
+	apq->ic = apq->ic->urm;
+	free(celula_de_sters->info);
+	free(celula_de_sters);
+
+	return elem;
+}
+
+void* PeakPQ(APQ apq)
+{
+	if (apq->ic == NULL) {
+		return NULL;
+	}
+
+	void *elem = ((TPQVal*)(apq->ic->info))->val;
+	return elem;
+}
+
+unsigned long PeakPriPQ(APQ apq)
+{
+	if (apq->ic == NULL) {
+		return 0;
+	}
+
+	return ((TPQVal*)(apq->ic->info))->priority;	
+}
+

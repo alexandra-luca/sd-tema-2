@@ -17,4 +17,24 @@ void* ExtractQ(AQ aq);
 void* PeakQ(AQ aq);
 int EmptyQ(AQ aq);
 
+typedef struct 
+{
+	size_t dime;
+	ACel ic;
+} TPCoada, *APQ;
+
+typedef struct 
+{
+	void *val;
+	int priority;
+} TPQVal;
+
+APQ InitPQ(size_t dime);
+void DestroyPQ(APQ apq);
+void InsertPQ(APQ apq, void *elem, unsigned long priority);
+void* ExtractPQ(APQ apq);
+void* PeakPQ(APQ apq);
+int EmptyPQ(APQ apq);
+unsigned long PeakPriPQ(APQ apq);
+
 #endif
