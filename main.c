@@ -29,7 +29,7 @@ typedef struct
 	AQ istoric;
 	APQ downloading;
 	List downloaded;
-	int bandwidth;
+	unsigned long bandwidth;
 } TBrowser;
 
 // initializeaza pagina
@@ -105,15 +105,28 @@ AQ IstoricInit()
 // dezaloca istoricul
 void IstoricDestroy(AQ aist)
 {
-	// todo
+	DestroyQ(aist);
 }
 
-//functie care sterge n pagini din istoric
+// functie care sterge n pagini din istoric
 void IstoricClear(AQ aist, int n) 
 {
 	int i;
-	for (i = 0; i < n; i++) {
-		ExtractQ(aist);
+	if (n != 0) {
+		for (i = 0; i < n; i++) {
+			if (EmptyQ(aist)) {
+				break;
+			}
+
+			char *x = ExtractQ(aist);
+			free(x);
+		}
+	} else {
+		// daca n=0 trebuie sa sterg tot istoricul
+		while (!EmptyQ(aist)) {
+			char *x = ExtractQ(aist);
+			free(x);	
+		}
 	}
 }
 
@@ -154,7 +167,7 @@ TBrowser* BrowserInit()
 }
 
 //functie care seteaza bandwidth
-void BrowserSetBandwidth(TBrowser *abrowser, int bandwidth) 
+void BrowserSetBandwidth(TBrowser *abrowser, unsigned long bandwidth) 
 {
 	// updatez bandwidth
 	abrowser->bandwidth = bandwidth;
@@ -201,7 +214,6 @@ void BrowserDelTab(TBrowser *abrowser)
 	}
 
 	TabDestroy(t);
-	free(p);
 	ant->urm = NULL;
 }
 
@@ -248,12 +260,11 @@ void BrowserPrintHistory(TBrowser *abrowser, FILE *fout)
 	while (!EmptyQ(abrowser->istoric)) {
 		url = ExtractQ(abrowser->istoric);
 		InsertQ(coada_intermediara, url);
-		free(url);
-
+		
 		fprintf(fout, "%s\n", url);
 	}
 
-	DestroyQ(abrowser->istoric);
+	IstoricDestroy(abrowser->istoric);
 	abrowser->istoric = coada_intermediara;
 }
 
@@ -262,6 +273,11 @@ void BrowserPrintResources(TBrowser *abrowser, FILE *fout)
 {
 	TTab *current_tab = abrowser->atab_curent;
 	TPagina *current_page = current_tab->current_page;
+
+	if (current_page == NULL) {
+		// nu exista nicio pagina deschisa
+		return;
+	}	
 
 	int i;
 	for (i = 0; i < current_page->num_res; i++) {
@@ -276,6 +292,11 @@ void BrowserDownloadResource(TBrowser *abrowser, int index)
 	TTab *current_tab = abrowser->atab_curent;
 	TPagina *current_page = current_tab->current_page;
 
+	if (current_page == NULL) {
+		// nu exista nicio pagina deschisa 
+		return;
+	}
+
 	unsigned long priority = current_page->resources[index].dimension;
 
 	InsertPQ(abrowser->downloading, &(current_page->resources[index]), priority);
@@ -285,7 +306,7 @@ void BrowserDownloadResource(TBrowser *abrowser, int index)
 void BrowserWait(TBrowser *abrowser, int time)
 {
 	APQ pq = InitPQ(sizeof(Resource));
-	unsigned long bytes_de_descarcat = time * abrowser->bandwidth;
+	unsigned long bytes_de_descarcat = (unsigned long)time * abrowser->bandwidth;
 
 	while (!EmptyPQ(abrowser->downloading)) {
 		unsigned long priority = PeakPriPQ(abrowser->downloading);
@@ -305,9 +326,18 @@ void BrowserWait(TBrowser *abrowser, int time)
 			// inserez in lista de descarcari finalizate
 			
 			ACel celula = (ACel)malloc(sizeof(TCel));
-			celula->info = elem;
-			celula->urm = abrowser->downloaded;
-			abrowser->downloaded = celula;
+			celula->info = malloc(sizeof(char) * strlen((char*)elem));
+			strcpy(celula->info, elem);
+			celula->urm = NULL;
+			if (abrowser->downloaded == NULL) {
+				abrowser->downloaded = celula;
+			} else {
+				ACel p = abrowser->downloaded;
+				while (p->urm != NULL) {
+					p = p->urm;
+				}
+				p->urm = celula;
+			}
 		}
 
 		free(r);
@@ -321,7 +351,7 @@ void BrowserWait(TBrowser *abrowser, int time)
 void BrowserPrintDownloads(TBrowser *abrowser, FILE *fout) 
 {
 	// afisez resursele in curs de descarcare
-	APQ pq = InitPQ(sizeof(char)*100);
+	APQ pq = InitPQ(sizeof(Resource));
 
 	while (!EmptyPQ(abrowser->downloading)) {
 		unsigned long priority = PeakPriPQ(abrowser->downloading);
@@ -335,6 +365,7 @@ void BrowserPrintDownloads(TBrowser *abrowser, FILE *fout)
 		free(r);
 	}
 
+	DestroyPQ(abrowser->downloading);
 	abrowser->downloading = pq;
 
 	// afisez descarcarile finalizate
@@ -374,6 +405,8 @@ int main(int argc, char *argv[])
 		p = strtok(linie, " ");
 		strcpy(comanda, p);
 
+		//printf("%s\n", comanda);
+
 		if (strcmp(comanda, "set_band") == 0) {
 			// 4.1
 			p = strtok(NULL, " ");
@@ -401,6 +434,7 @@ int main(int argc, char *argv[])
 
 			TabGoto(abrowser->atab_curent, p);
 			IstoricAdd(abrowser->istoric, p);
+			BrowserWait(abrowser, 1);
 		} else if (strcmp(comanda, "back") == 0) {
 			// 4.7
 
@@ -413,7 +447,7 @@ int main(int argc, char *argv[])
 			// 4.9
 
 			BrowserPrintHistory(abrowser, fout);
-		} else if (strcmp(comanda, "del_histroy") == 0) {
+		} else if (strcmp(comanda, "del_history") == 0) {
 			// 4.10
 			p = strtok(NULL, " ");
 			x = atoi(p);

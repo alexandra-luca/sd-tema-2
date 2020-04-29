@@ -31,7 +31,7 @@ void InsertQ(AQ aq, void *elem)
 	acel->info = malloc(aq->dime);
 	memcpy(acel->info, elem, aq->dime);
 	
-	if (aq->sc == NULL) {
+	if (aq->ic == NULL) {
 		aq->sc = acel;
 		aq->ic = acel;
 	} else {
